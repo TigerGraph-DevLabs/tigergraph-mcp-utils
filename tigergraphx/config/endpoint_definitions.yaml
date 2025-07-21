@@ -7,6 +7,10 @@ endpoints:
   get_version:
     path: "/restpp/version"
 
+  get_gsql_version:
+    path: "/gsql/v1/version"
+    content_type: "text/plain"
+
   # ------------------------------ GSQL ------------------------------
   gsql:
     path:
