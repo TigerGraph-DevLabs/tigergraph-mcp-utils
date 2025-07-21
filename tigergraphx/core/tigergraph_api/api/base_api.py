@@ -111,7 +111,7 @@ class BaseAPI:
                 self._raise_for_status(response)
 
                 results = response_json.get("results")
-                if results:
+                if results is not None:
                     return results
                 # Check for drop-specific keys if no results
                 if "dropped" in response_json or "failedToDrop" in response_json:
