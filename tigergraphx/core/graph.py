@@ -174,12 +174,15 @@ class Graph:
         return self._schema_manager.drop_graph()
 
     # ------------------------------ Data Loading Operations ------------------------------
-    def load_data(self, loading_job_config: LoadingJobConfig | Dict | str | Path):
+    def load_data(self, loading_job_config: LoadingJobConfig | Dict | str | Path) -> str:
         """
         Load data into the graph using the provided loading job configuration.
 
         Args:
             loading_job_config: Loading job config.
+
+        Returns:
+            GSQL response string after executing the loading job.
         """
         return self._data_manager.load_data(loading_job_config)
 

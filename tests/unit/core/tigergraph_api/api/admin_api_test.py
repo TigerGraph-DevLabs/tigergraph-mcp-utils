@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from tigergraphx.core.tigergraph_api import AdminAPI
+from tigergraphx.core.tigergraph_api.api import AdminAPI
 from tigergraphx.config import TigerGraphConnectionConfig
 
 

@@ -6,12 +6,13 @@
 # under the License. The software is provided "AS IS", without warranty.
 
 from .graph import Graph
-from .tigergraph_api import TigerGraphAPI
+from .tigergraph_api import TigerGraphAPI, TigerGraphAPIError
 from .tigergraph_database import TigerGraphDatabase
 
 
 __all__ = [
     "Graph",
     "TigerGraphAPI",
+    "TigerGraphAPIError",
     "TigerGraphDatabase",
 ]

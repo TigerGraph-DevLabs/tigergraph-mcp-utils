@@ -74,6 +74,7 @@ __all__ = [
     "TigerGraphConnectionConfig",
     # configurations for queries
     "NodeSpec",
+    "EdgeSpec",
     "NeighborSpec",
     # configurations for GraphRAG
     "Settings",

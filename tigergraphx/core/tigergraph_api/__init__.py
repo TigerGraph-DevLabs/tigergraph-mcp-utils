@@ -9,10 +9,6 @@ from .tigergraph_api import TigerGraphAPI
 from .endpoint_handler import EndpointRegistry
 from .api import (
     TigerGraphAPIError,
-    AdminAPI,
-    GSQLAPI,
-    SchemaAPI,
-    QueryAPI,
     DataSourceType,
 )
 
@@ -20,9 +16,5 @@ __all__ = [
     "TigerGraphAPI",
     "EndpointRegistry",
     "TigerGraphAPIError",
-    "AdminAPI",
-    "GSQLAPI",
-    "SchemaAPI",
-    "QueryAPI",
     "DataSourceType",
 ]

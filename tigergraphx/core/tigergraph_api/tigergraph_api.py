@@ -14,6 +14,7 @@ from .endpoint_handler.endpoint_registry import EndpointRegistry
 from .api import (
     AdminAPI,
     GSQLAPI,
+    SecurityAPI,
     SchemaAPI,
     DataSourceAPI,
     NodeAPI,
@@ -91,6 +92,9 @@ class TigerGraphAPI:
         self._gsql_api = GSQLAPI(
             self.config, self.endpoint_registry, self.session, self.version
         )
+        self._security_api = SecurityAPI(
+            self.config, self.endpoint_registry, self.session, self.version
+        )
         self._data_source_api = DataSourceAPI(
             self.config, self.endpoint_registry, self.session, self.version
         )
@@ -141,6 +145,39 @@ class TigerGraphAPI:
             Response string from the GSQL server.
         """
         return self._gsql_api.gsql(command)
+
+    # ------------------------------ Security ------------------------------
+    def create_token(
+        self,
+        secret: str,
+        graph_name: Optional[str] = None,
+        lifetime_seconds: Optional[int] = None,
+    ) -> str:
+        """Create an auth token using a secret.
+
+        Args:
+            secret: The secret alias to use for token generation.
+            graph_name: The name of the graph to scope the token.
+            lifetime_seconds: Duration in seconds before the token expires.
+
+        Returns:
+            The generated authentication token as a string.
+        """
+        return self._security_api.create_token(secret, graph_name, lifetime_seconds)
+
+    def drop_token(
+        self,
+        token: str,
+    ) -> str:
+        """Drop an authentication token.
+
+        Args:
+            token: The token to be revoked.
+
+        Returns:
+            The response message from the server.
+        """
+        return self._security_api.drop_token(token)
 
     # ------------------------------ Data Source ------------------------------
     def create_data_source(

@@ -94,9 +94,9 @@ class BaseAPI:
                 try:
                     response_json = response.json()
                 except ValueError:
-                    raise RuntimeError(
-                        f"Invalid JSON response from TigerGraph: {response.text.strip()}"
-                    )
+                    # Server lied about Content-Type, fallback to plain text
+                    self._raise_for_status(response)
+                    return response.text.strip()
 
                 # Check if TigerGraph API returned an error
                 if response_json.get("error", False) or response_json.get(
@@ -111,14 +111,20 @@ class BaseAPI:
                 self._raise_for_status(response)
 
                 results = response_json.get("results")
-                if results:
+                if results is not None:
                     return results
+
                 # Check for drop-specific keys if no results
                 if "dropped" in response_json or "failedToDrop" in response_json:
                     return {
                         "dropped": response_json.get("dropped", []),
                         "failedToDrop": response_json.get("failedToDrop", []),
                     }
+
+                # Check for token-specific keys if no results
+                if "token" in response_json:
+                    return response_json.get("token", "")
+
                 # Fallback to message
                 return response_json.get("message", None)
 

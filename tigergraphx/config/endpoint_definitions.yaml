@@ -7,6 +7,10 @@ endpoints:
   get_version:
     path: "/restpp/version"
 
+  get_gsql_version:
+    path: "/gsql/v1/version"
+    content_type: "text/plain"
+
   # ------------------------------ GSQL ------------------------------
   gsql:
     path:
@@ -15,13 +19,24 @@ endpoints:
     method: "POST"
     content_type: "text/plain"
 
+  # ------------------------------ Security ------------------------------
+  create_token:
+    path:
+      4.x: "/gsql/v1/tokens"
+    method: "POST"
+
+  drop_token:
+    path:
+      4.x: "/gsql/v1/tokens"
+    method: "DELETE"
+
   # ------------------------------ Schema ------------------------------
   get_schema:
     path:
       # 3.x: "/gsqlserver/gsql/schema"
       4.x: "/gsql/v1/schema/graphs/{graph_name}"
 
-  # ------------------------------ Data ------------------------------
+  # ------------------------------ Data Source ------------------------------
   create_data_source:
     path:
       4.x: "/gsql/v1/data-sources"

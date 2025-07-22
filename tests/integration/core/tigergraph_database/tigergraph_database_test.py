@@ -1,6 +1,7 @@
 import pytest
 import yaml
 from pathlib import Path
+import re
 
 from tigergraphx import Graph, TigerGraphDatabase
 from tigergraphx.core.tigergraph_api import TigerGraphAPIError
@@ -70,6 +71,72 @@ class TestTigerGraphDatabase:
         finally:
             G.drop_graph()
 
+    def test_secrets(self):
+        alias = "test_secret"
+
+        # Ensure clean start
+        try:
+            self.db.drop_secret(alias)
+        except Exception:
+            pass
+
+        try:
+            result = self.db.show_secrets()
+            assert isinstance(result, str)
+            assert alias not in result
+
+            result = self.db.create_secret(alias)
+            assert isinstance(result, str)
+            assert "has been created for user" in result
+
+            result = self.db.show_secrets()
+            assert isinstance(result, str)
+            assert alias in result
+
+            result = self.db.drop_secret(alias)
+            assert isinstance(result, str)
+            assert "Successfully dropped secret" in result
+
+            result = self.db.show_secrets()
+            assert isinstance(result, str)
+            assert alias not in result
+
+        finally:
+            try:
+                self.db.drop_secret(alias)
+            except Exception:
+                pass
+
+    def test_tokens(self):
+        alias = "test_secret"
+
+        try:
+            result = self.db.create_secret(alias)
+            assert isinstance(result, str)
+            assert "has been created for user" in result
+
+            match = re.search(r"The secret:\s*([a-z0-9]+)\s*has been created", result)
+            secret = match.group(1) if match else None
+            assert secret, "Secret not extracted from response"
+
+            token = self.db.create_token(secret)
+
+            # Check token is a non-empty string and matches JWT pattern (3 parts separated by dots)
+            assert isinstance(token, str)
+            assert re.fullmatch(r"^[\w-]+\.[\w-]+\.[\w-]+$", token), (
+                f"Invalid token format: {token}"
+            )
+
+            # Drop the token
+            result = self.db.drop_token(token)
+            assert "Successfully dropped the specified JWT tokens" in result
+
+        finally:
+            try:
+                self.db.drop_secret(alias)
+            except Exception:
+                pass
+
     def test_data_source_CRUD(self):
         data_source_name = "db_data_source_test"
         data_source_type = "s3"
@@ -106,6 +173,50 @@ class TestTigerGraphDatabase:
             drop_result = self.db.drop_all_data_sources()
             assert isinstance(drop_result, str)
             assert "All data sources is dropped successfully." in drop_result
+
+    def test_data_source_all(self):
+        data_source_name = "db_data_source_test"
+        data_source_type = "s3"
+
+        # Create data source
+        create_result = self.db.create_data_source(
+            name=data_source_name, data_source_type=data_source_type
+        )
+        assert isinstance(create_result, str), (
+            "create_data_source() should return a string"
+        )
+        assert f"Data source {data_source_name} is created" in create_result, (
+            "Unexpected create message"
+        )
+
+        try:
+            # Retrieve all data sources and validate presence
+            all_sources = self.db.get_all_data_sources()
+            assert isinstance(all_sources, list), (
+                "get_all_data_sources() should return a list"
+            )
+            assert any(
+                isinstance(ds, dict) and ds.get("name") == data_source_name
+                for ds in all_sources
+            ), f"{data_source_name} should exist in data sources"
+        finally:
+            # Drop all data sources
+            drop_result = self.db.drop_all_data_sources()
+            assert isinstance(drop_result, str), (
+                "drop_all_data_sources() should return a string"
+            )
+            assert "All data sources is dropped successfully." in drop_result, (
+                "Unexpected drop message"
+            )
+
+        # Verify get_all_data_sources works for empty state
+        empty_sources = self.db.get_all_data_sources()
+        assert isinstance(empty_sources, list), (
+            "get_all_data_sources() should return a list even when empty"
+        )
+        assert len(empty_sources) == 0, (
+            "Data sources should be empty after drop_all_data_sources"
+        )
 
     def test_get_data_source_not_found(self):
         data_source_name = "nonexistent_datasource"
