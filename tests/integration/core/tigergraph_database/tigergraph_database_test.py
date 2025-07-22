@@ -1,6 +1,7 @@
 import pytest
 import yaml
 from pathlib import Path
+import re
 
 from tigergraphx import Graph, TigerGraphDatabase
 from tigergraphx.core.tigergraph_api import TigerGraphAPIError
@@ -69,6 +70,72 @@ class TestTigerGraphDatabase:
             assert f"Graph {graph_name}(Person:v, Friendship:e)" in result
         finally:
             G.drop_graph()
+
+    def test_secrets(self):
+        alias = "test_secret"
+
+        # Ensure clean start
+        try:
+            self.db.drop_secret(alias)
+        except Exception:
+            pass
+
+        try:
+            result = self.db.show_secrets()
+            assert isinstance(result, str)
+            assert alias not in result
+
+            result = self.db.create_secret(alias)
+            assert isinstance(result, str)
+            assert "has been created for user" in result
+
+            result = self.db.show_secrets()
+            assert isinstance(result, str)
+            assert alias in result
+
+            result = self.db.drop_secret(alias)
+            assert isinstance(result, str)
+            assert "Successfully dropped secret" in result
+
+            result = self.db.show_secrets()
+            assert isinstance(result, str)
+            assert alias not in result
+
+        finally:
+            try:
+                self.db.drop_secret(alias)
+            except Exception:
+                pass
+
+    def test_tokens(self):
+        alias = "test_secret"
+
+        try:
+            result = self.db.create_secret(alias)
+            assert isinstance(result, str)
+            assert "has been created for user" in result
+
+            match = re.search(r"The secret:\s*([a-z0-9]+)\s*has been created", result)
+            secret = match.group(1) if match else None
+            assert secret, "Secret not extracted from response"
+
+            token = self.db.create_token(secret)
+
+            # Check token is a non-empty string and matches JWT pattern (3 parts separated by dots)
+            assert isinstance(token, str)
+            assert re.fullmatch(r"^[\w-]+\.[\w-]+\.[\w-]+$", token), (
+                f"Invalid token format: {token}"
+            )
+
+            # Drop the token
+            result = self.db.drop_token(token)
+            assert "Successfully dropped the specified JWT tokens" in result
+
+        finally:
+            try:
+                self.db.drop_secret(alias)
+            except Exception:
+                pass
 
     def test_data_source_CRUD(self):
         data_source_name = "db_data_source_test"

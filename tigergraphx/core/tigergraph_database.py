@@ -76,11 +76,85 @@ class TigerGraphDatabase:
         Returns:
             The string output of the LS command.
         """
+        command = "LS"
         if graph_name:
-            command = f"USE GRAPH {graph_name}\nLS"
-        else:
-            command = "LS"
+            command = f"USE GRAPH {graph_name}\n{command}"
         return self._tigergraph_api.gsql(command)
+
+    # ------------------------------ Security ------------------------------
+    def show_secrets(self) -> str:
+        """
+        List secrets configured in the TigerGraph database.
+
+        Executes the global `SHOW SECRET` command.
+
+        Returns:
+            The string output of the SHOW SECRET command.
+        """
+        command = "SHOW SECRET"
+        return self._tigergraph_api.gsql(command)
+
+    def create_secret(self, alias: str) -> str:
+        """
+        Create a new secret in the TigerGraph database with the specified alias.
+
+        Executes the global `CREATE SECRET {alias}` command.
+
+        Args:
+            alias: The alias name for the new secret.
+
+        Returns:
+            The string output of the CREATE SECRET command.
+        """
+        command = f"CREATE SECRET {alias}"
+        return self._tigergraph_api.gsql(command)
+
+    def drop_secret(self, alias: str) -> str:
+        """
+        Drop an existing secret from the TigerGraph database with the specified alias.
+
+        Executes the global `DROP SECRET {alias}` command.
+
+        Args:
+            alias: The alias name of the secret to be dropped.
+
+        Returns:
+            The string output of the DROP SECRET command.
+        """
+        command = f"DROP SECRET {alias}"
+        return self._tigergraph_api.gsql(command)
+
+    def create_token(
+        self,
+        secret: str,
+        graph_name: Optional[str] = None,
+        lifetime_seconds: Optional[int] = None,
+    ) -> str:
+        """Create an auth token using a secret.
+
+        Args:
+            secret: The secret alias to use for token generation.
+            graph_name: The name of the graph to scope the token.
+            lifetime_seconds: Duration in seconds before the token expires.
+
+        Returns:
+            The generated authentication token as a string.
+        """
+        return self._tigergraph_api.create_token(secret, graph_name, lifetime_seconds)
+
+    def drop_token(
+        self,
+        token: str,
+    ) -> str:
+        """Drop an authentication token.
+
+        Args:
+            token: The token to be revoked.
+
+        Returns:
+            The response message from the server.
+        """
+        return self._tigergraph_api.drop_token(token)
 
     # ------------------------------ Data Source ------------------------------
     def create_data_source(

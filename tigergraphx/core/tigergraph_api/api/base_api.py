@@ -120,6 +120,11 @@ class BaseAPI:
                         "dropped": response_json.get("dropped", []),
                         "failedToDrop": response_json.get("failedToDrop", []),
                     }
+
+                # Check for token-specific keys if no results
+                if "token" in response_json:
+                    return response_json.get("token", "")
+
                 # Fallback to message
                 return response_json.get("message", None)
 

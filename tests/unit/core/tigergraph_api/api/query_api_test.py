@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 from datetime import datetime
 
-from tigergraphx.core.tigergraph_api import QueryAPI, TigerGraphAPIError
+from tigergraphx.core.tigergraph_api.api import QueryAPI, TigerGraphAPIError
 from tigergraphx.config import TigerGraphConnectionConfig
 
 
