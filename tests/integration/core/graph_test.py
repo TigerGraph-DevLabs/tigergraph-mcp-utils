@@ -675,5 +675,6 @@ class TestGraph2(BaseGraphFixture):
         # Load data
         loading_job_config = self.create_loading_job_config()
         assert loading_job_config is not None
-        # self.G.load_data(loading_job_config)
+        # result = self.G.load_data(loading_job_config)
         # assert len(self.G.nodes) > 0
+        # assert "LOAD SUCCESSFUL for loading jobid" in result

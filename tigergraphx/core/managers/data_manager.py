@@ -22,7 +22,7 @@ class DataManager(BaseManager):
     def __init__(self, context: GraphContext):
         super().__init__(context)
 
-    def load_data(self, loading_job_config: LoadingJobConfig | Dict | str | Path):
+    def load_data(self, loading_job_config: LoadingJobConfig | Dict | str | Path) -> str:
         loading_job_config = LoadingJobConfig.ensure_config(loading_job_config)
         logger.info(
             f"Initiating data load for job: {loading_job_config.loading_job_name}...",
@@ -48,6 +48,7 @@ class DataManager(BaseManager):
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         logger.info("Data load completed successfully.")
+        return result
 
     def _create_gsql_load_data(
         self,
