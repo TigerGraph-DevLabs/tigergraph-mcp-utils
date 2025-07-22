@@ -4,6 +4,12 @@
 
 Note: version releases in the 0.x.y range may include both bug fixes and new features, not strictly limited to patches.
 
+## 0.2.11
+- fix: resolve type error in get_all_data_sources when no data sources exist
+- fix: add GSQL version fallback for cases requiring token-based auth
+- feat: add methods for creating/showing/dropping secrets and creating/dropping tokens
+- feat: return GSQL response from load_data for better visibility and debugging
+
 ## 0.2.10
 - test: mock AdminAPI.get_version to prevent real HTTP calls during Graph initialization
 - feat: add method list_metadata to class TigerGraphDatabase
