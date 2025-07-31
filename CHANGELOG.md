@@ -4,6 +4,9 @@
 
 Note: version releases in the 0.x.y range may include both bug fixes and new features, not strictly limited to patches.
 
+## 0.2.12
+- feat: add validation for reserved keywords in graph schema
+
 ## 0.2.11
 - fix: resolve type error in get_all_data_sources when no data sources exist
 - fix: add GSQL version fallback for cases requiring token-based auth

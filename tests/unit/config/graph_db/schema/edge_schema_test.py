@@ -59,3 +59,19 @@ class TestEdgeSchema:
                     ),
                 },
             )
+
+    def test_edge_schema_reserved_keyword_in_attributes(self):
+        """Test EdgeSchema with a reserved keyword as attribute name."""
+        attributes = {
+            "weight": AttributeSchema(data_type=DataType.DOUBLE),
+            "from": AttributeSchema(data_type=DataType.STRING),
+        }
+        with pytest.raises(
+            ValueError, match="Attribute name 'from' is a reserved keyword."
+        ):
+            EdgeSchema(
+                is_directed_edge=True,
+                from_node_type="NodeA",
+                to_node_type="NodeB",
+                attributes=attributes,
+            )

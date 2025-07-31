@@ -63,6 +63,51 @@ class TestGraphSchema:
         ):
             GraphSchema(graph_name="InvalidGraph", nodes=nodes, edges=edges)
 
+    def test_graph_name_reserved_keyword(self):
+        """Graph name should not be a reserved keyword."""
+        nodes = {
+            "Person": NodeSchema(
+                primary_key="id",
+                attributes={"id": AttributeSchema(data_type=DataType.STRING)},
+            )
+        }
+        with pytest.raises(ValueError, match="Graph name 'ADD' is a reserved keyword"):
+            GraphSchema(graph_name="ADD", nodes=nodes, edges={})
+
+    def test_node_name_reserved_keyword(self):
+        """Node type name should not be a reserved keyword."""
+        nodes = {
+            "ASC": NodeSchema(
+                primary_key="id",
+                attributes={"id": AttributeSchema(data_type=DataType.STRING)},
+            )
+        }
+        with pytest.raises(ValueError, match="Node type 'ASC' is a reserved keyword"):
+            GraphSchema(graph_name="MyGraph", nodes=nodes, edges={})
+
+    def test_edge_name_reserved_keyword(self):
+        """Edge type name should not be a reserved keyword."""
+        nodes = {
+            "NodeA": NodeSchema(
+                primary_key="id",
+                attributes={"id": AttributeSchema(data_type=DataType.STRING)},
+            ),
+            "NodeB": NodeSchema(
+                primary_key="id",
+                attributes={"id": AttributeSchema(data_type=DataType.STRING)},
+            ),
+        }
+        edges = {
+            "CASE": EdgeSchema(
+                is_directed_edge=True,
+                from_node_type="NodeA",
+                to_node_type="NodeB",
+                attributes={},
+            )
+        }
+        with pytest.raises(ValueError, match="Edge type 'CASE' is a reserved keyword"):
+            GraphSchema(graph_name="MyGraph", nodes=nodes, edges=edges)
+
     def test_ensure_config_from_dict(self):
         """Test ensure_config with a dictionary input."""
         config_dict = {

@@ -9,6 +9,7 @@ from typing import Any, Dict, Set
 from pydantic import Field, model_validator
 
 from .attribute_schema import AttributeSchema, AttributesType, create_attribute_schema
+from .reserved_keywords import is_reserved_keyword
 
 from tigergraphx.config import BaseConfig
 
@@ -76,6 +77,14 @@ class EdgeSchema(BaseConfig):
                     raise ValueError(
                         f"Edge identifier '{attribute}' is not defined in attributes."
                     )
+        return self
+
+    @model_validator(mode="after")
+    def validate_reserved_keywords(self) -> "EdgeSchema":
+        for attr_name in self.attributes:
+            if is_reserved_keyword(attr_name):
+                raise ValueError(f"Attribute name '{attr_name}' is a reserved keyword.")
+
         return self
 
 
