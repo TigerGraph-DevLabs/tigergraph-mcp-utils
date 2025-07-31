@@ -14,6 +14,7 @@ from .vector_attribute_schema import (
     VectorAttributesType,
     create_vector_attribute_schema,
 )
+from .reserved_keywords import is_reserved_keyword
 
 from tigergraphx.config import BaseConfig
 
@@ -72,6 +73,20 @@ class NodeSchema(BaseConfig):
             raise ValueError(
                 f"Primary key '{self.primary_key}' is not defined in attributes."
             )
+        return self
+
+    @model_validator(mode="after")
+    def validate_reserved_keywords(self) -> "NodeSchema":
+        for attr_name in self.attributes:
+            if is_reserved_keyword(attr_name):
+                raise ValueError(f"Attribute name '{attr_name}' is a reserved keyword.")
+
+        for vec_attr_name in self.vector_attributes:
+            if is_reserved_keyword(vec_attr_name):
+                raise ValueError(
+                    f"Vector attribute name '{vec_attr_name}' is a reserved keyword."
+                )
+
         return self
 
 
