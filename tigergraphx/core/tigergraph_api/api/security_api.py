@@ -13,12 +13,12 @@ from .base_api import BaseAPI
 class SecurityAPI(BaseAPI):
     def create_token(
         self,
-        secret: str,
+        secret_alias: str,
         graph_name: Optional[str] = None,
         lifetime_seconds: Optional[int] = None,
     ) -> str:
         payload: Dict[str, Any] = {
-            "secret": secret,
+            "secret": secret_alias,
         }
         if graph_name:
             payload["graph"] = graph_name

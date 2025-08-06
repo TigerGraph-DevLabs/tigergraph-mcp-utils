@@ -126,21 +126,21 @@ class TigerGraphDatabase:
 
     def create_token(
         self,
-        secret: str,
+        secret_alias: str,
         graph_name: Optional[str] = None,
         lifetime_seconds: Optional[int] = None,
     ) -> str:
         """Create an auth token using a secret.
 
         Args:
-            secret: The secret alias to use for token generation.
+            secret_alias: The secret alias to use for token generation.
             graph_name: The name of the graph to scope the token.
             lifetime_seconds: Duration in seconds before the token expires.
 
         Returns:
             The generated authentication token as a string.
         """
-        return self._tigergraph_api.create_token(secret, graph_name, lifetime_seconds)
+        return self._tigergraph_api.create_token(secret_alias, graph_name, lifetime_seconds)
 
     def drop_token(
         self,

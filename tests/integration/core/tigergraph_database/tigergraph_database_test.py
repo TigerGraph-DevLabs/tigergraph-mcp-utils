@@ -116,10 +116,10 @@ class TestTigerGraphDatabase:
             assert "has been created for user" in result
 
             match = re.search(r"The secret:\s*([a-z0-9]+)\s*has been created", result)
-            secret = match.group(1) if match else None
-            assert secret, "Secret not extracted from response"
+            secret_alias = match.group(1) if match else None
+            assert secret_alias, "Secret not extracted from response"
 
-            token = self.db.create_token(secret)
+            token = self.db.create_token(secret_alias)
 
             # Check token is a non-empty string and matches JWT pattern (3 parts separated by dots)
             assert isinstance(token, str)
