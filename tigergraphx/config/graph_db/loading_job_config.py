@@ -46,7 +46,7 @@ class NodeMappingConfig(BaseConfig):
     """
 
     target_name: str = Field(description="The name of the target node type.")
-    attribute_column_mappings: Dict[str, str | int] = Field(
+    attribute_column_mappings: Dict[str, str | int | Dict] = Field(
         default={}, description="Mapping file columns to node attributes."
     )
 

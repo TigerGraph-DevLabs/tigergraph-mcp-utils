@@ -4,6 +4,10 @@
 
 Note: version releases in the 0.x.y range may include both bug fixes and new features, not strictly limited to patches.
 
+## 0.2.13
+- feat: rename parameter `secret` to `secret_alias` in `create_token` method for clarity
+- feat: add strict type checks for column_name formatting and raise errors on invalid inputs
+
 ## 0.2.12
 - feat: add validation for reserved keywords in graph schema
 
