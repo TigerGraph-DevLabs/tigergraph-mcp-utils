@@ -40,3 +40,29 @@ class TestDataManager:
         # Assert that RuntimeError is raised on failure
         with pytest.raises(RuntimeError):
             self.data_manager.load_data(loading_job_config)
+
+    def test_format_none(self):
+        assert DataManager._format_column_name(None) == "_"
+
+    def test_format_int(self):
+        assert DataManager._format_column_name(3) == "$3"
+
+    def test_format_str_simple(self):
+        assert DataManager._format_column_name("person") == '$"person"'
+
+    def test_format_str_with_space(self):
+        assert DataManager._format_column_name("person name") == '$"person name"'
+
+    def test_format_function_dict(self):
+        assert (
+            DataManager._format_column_name({"func": "gsql_uuid_v4()"})
+            == "gsql_uuid_v4()"
+        )
+
+    def test_format_function_dict_invalid_type(self):
+        with pytest.raises(TypeError):
+            DataManager._format_column_name({"func": 123})
+
+    def test_format_unsupported_type(self):
+        with pytest.raises(TypeError):
+            DataManager._format_column_name([1, 2, 3])  # pyright: ignore

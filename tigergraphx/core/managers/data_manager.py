@@ -22,7 +22,9 @@ class DataManager(BaseManager):
     def __init__(self, context: GraphContext):
         super().__init__(context)
 
-    def load_data(self, loading_job_config: LoadingJobConfig | Dict | str | Path) -> str:
+    def load_data(
+        self, loading_job_config: LoadingJobConfig | Dict | str | Path
+    ) -> str:
         loading_job_config = LoadingJobConfig.ensure_config(loading_job_config)
         logger.info(
             f"Initiating data load for job: {loading_job_config.loading_job_name}...",
@@ -229,13 +231,23 @@ DROP JOB {loading_job_name}
         return gsql_script.strip()
 
     @staticmethod
-    def _format_column_name(column_name: str | int | None) -> str:
+    def _format_column_name(column_name: str | int | Dict | None) -> str:
         """Format column names as $number, $"variable", or _ for empty names."""
         if column_name is None:
             return "_"
         if isinstance(column_name, int):
             return f"${column_name}"
-        if isinstance(column_name, str) and column_name.isidentifier():
+        if isinstance(column_name, str):
             return f'$"{column_name}"'
-        # Return the original name as string if it doesn't match any of the specified formats
-        return str(column_name)
+        if isinstance(column_name, dict) and "func" in column_name:
+            func = column_name["func"]
+            if not isinstance(func, str):
+                raise TypeError(
+                    f"Invalid function reference: {func!r}. Expected a string."
+                )
+            return func
+
+        # Unknown type → raise explicit error
+        raise TypeError(
+            f"Unsupported column name type: {type(column_name).__name__}, value={column_name!r}"
+        )
