@@ -356,8 +356,9 @@ class TestGraph1(BaseGraphFixture):
         Test creating, running, and dropping a GSQL query using the integration setup.
         """
         # Define a GSQL query to install
+        query_name = "getUserPurchases"
         gsql_query = f"""
-        CREATE QUERY getUserPurchases(VERTEX<User> user) FOR GRAPH {self.G.name} {{
+        CREATE QUERY {query_name}(VERTEX<User> user) FOR GRAPH {self.G.name} {{
             Start = {{user}};
             Purchases = SELECT tgt FROM Start:s - (purchased:e) -> :tgt;
             PRINT Purchases;
@@ -369,8 +370,9 @@ class TestGraph1(BaseGraphFixture):
         assert success is True, "Expected query to be successfully created"
 
         # Install the query
-        query_name = "getUserPurchases"
+        assert not self.G.is_query_installed(query_name)
         success = self.G.install_query(query_name)
+        assert self.G.is_query_installed(query_name)
         assert success is True, "Expected query to be successfully created"
 
         # Run the query

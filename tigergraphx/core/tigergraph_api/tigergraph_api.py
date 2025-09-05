@@ -511,6 +511,20 @@ class TigerGraphAPI:
         """
         return self._query_api.run_installed_query_post(graph_name, query_name, params)
 
+    def get_query_info(self, graph_name: str) -> List:
+        """
+        Retrieve information about all queries for a given graph.
+
+        This includes query code, endpoints, parameters, and status.
+
+        Args:
+            graph_name: The name of the graph.
+
+        Returns:
+            API response as a list.
+        """
+        return self._query_api.get_query_info(graph_name)
+
     # ------------------------------ Upsert ------------------------------
     def upsert_graph_data(self, graph_name: str, payload: Dict[str, Any]) -> List:
         """

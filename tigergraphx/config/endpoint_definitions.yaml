@@ -121,6 +121,9 @@ endpoints:
     path: "/restpp/query/{graph_name}/{query_name}"
     method: "POST"
 
+  get_query_info:
+    path: "/gsql/v1/queries/info?graph={graph_name}"
+
   # ------------------------------ Upsert ------------------------------
   upsert_graph_data:
     path: "/restpp/graph/{graph_name}"
