@@ -66,6 +66,8 @@ datasets = "^3.2.0"
 mkdocs = "^1.6.1"
 mkdocs-material = "^9.5.48"
 mkdocstrings-python = "^1.12.2"
+python-dotenv = "^1.1.0"
+allure-pytest = "^2.14.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -88,6 +90,9 @@ lightrag_index = "python -m applications.lightrag.index"
 lightrag_query = "python -m applications.lightrag.query"
 lightrag_evaluation = "python -m applications.lightrag.evaluation"
 lightrag_reset = "python -m applications.lightrag.reset"
+
+# QA Test
+qa_test = {cmd = "pytest -vs ./tests/qatest --html=htmlcov/qa-report.html", env = {PYTHONDONTWRITEBYTECODE = "1"}}
 
 # Documentation
 notebook-to-markdown = "jupyter nbconvert --to markdown docs/getting_started/*.ipynb docs/graphrag/*.ipynb"
