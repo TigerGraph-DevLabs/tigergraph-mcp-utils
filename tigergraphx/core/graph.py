@@ -174,7 +174,9 @@ class Graph:
         return self._schema_manager.drop_graph()
 
     # ------------------------------ Data Loading Operations ------------------------------
-    def load_data(self, loading_job_config: LoadingJobConfig | Dict | str | Path) -> str:
+    def load_data(
+        self, loading_job_config: LoadingJobConfig | Dict | str | Path
+    ) -> str:
         """
         Load data into the graph using the provided loading job configuration.
 
@@ -530,6 +532,18 @@ class Graph:
             The query result or None if an error occurred.
         """
         return self._query_manager.run_query(query_name, params)
+
+    def is_query_installed(self, query_name: str) -> bool:
+        """
+        Check if a query is installed on the graph.
+
+        Args:
+            query_name: Name of the query.
+
+        Returns:
+            True if the query is installed, False otherwise.
+        """
+        return self._query_manager.is_query_installed(query_name)
 
     def get_nodes(
         self,

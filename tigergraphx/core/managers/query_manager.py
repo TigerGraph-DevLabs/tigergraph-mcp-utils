@@ -69,6 +69,20 @@ class QueryManager(BaseManager):
             logger.error(f"Error running query {query_name}: {e}")
             return None
 
+    def is_query_installed(self, query_name: str) -> bool:
+        try:
+            query_info = self._tigergraph_api.get_query_info(self._graph_name)
+            for query in query_info:
+                if (
+                    query.get("name") == query_name
+                    and query.get("installed")
+                ):
+                    return True
+            return False
+        except Exception as e:
+            logger.error(f"Error checking if query {query_name} is installed: {e}")
+            return False
+
     def get_nodes(
         self,
         node_type: Optional[str] = None,

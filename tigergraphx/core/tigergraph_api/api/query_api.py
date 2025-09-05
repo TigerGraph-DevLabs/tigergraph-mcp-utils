@@ -85,6 +85,15 @@ class QueryAPI(BaseAPI):
             raise TypeError(f"Expected list, but got {type(result).__name__}: {result}")
         return result
 
+    def get_query_info(self, graph_name: str) -> List:
+        result = self._request(
+            endpoint_name="get_query_info",
+            graph_name=graph_name,
+        )
+        if not isinstance(result, list):
+            raise TypeError(f"Expected list, but got {type(result).__name__}: {result}")
+        return result
+
     def _parse_query_parameters(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Parses query parameters into a dictionary suitable for HTTP requests.
