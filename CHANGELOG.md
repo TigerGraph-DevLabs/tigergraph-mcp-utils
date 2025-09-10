@@ -4,6 +4,9 @@
 
 Note: version releases in the 0.x.y range may include both bug fixes and new features, not strictly limited to patches.
 
+## 0.2.15
+- chore: upgrade dependencies to patched versions to fix security vulnerabilities
+
 ## 0.2.14
 - feat: add API to fetch query info and Graph method to check query installation
 
