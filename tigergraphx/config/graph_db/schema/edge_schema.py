@@ -5,7 +5,7 @@
 # Permission is granted to use, copy, modify, and distribute this software
 # under the License. The software is provided "AS IS", without warranty.
 
-from typing import Any, Dict, Set
+from typing import Any, Dict, Optional, Set
 from pydantic import Field, model_validator
 
 from .attribute_schema import AttributeSchema, AttributesType, create_attribute_schema
@@ -21,6 +21,9 @@ class EdgeSchema(BaseConfig):
 
     is_directed_edge: bool = Field(
         default=False, description="Whether the edge is directed."
+    )
+    reverse_edge_name: Optional[str] = Field(
+        default=None, description="The name of the reverse edge."
     )
     from_node_type: str = Field(description="The type of the source node.")
     to_node_type: str = Field(description="The type of the target node.")

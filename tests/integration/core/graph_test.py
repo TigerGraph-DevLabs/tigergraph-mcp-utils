@@ -256,12 +256,8 @@ class TestGraph1(BaseGraphFixture):
 
     def test_has_edges(self):
         # Test edge existence
-        assert not self.G.has_edge(
-            "User_A", 2, "User", "purchased", "Product"
-        )
-        assert not self.G.has_edge(
-            "User_A", 3, "User", "purchased", "Product"
-        )
+        assert not self.G.has_edge("User_A", 2, "User", "purchased", "Product")
+        assert not self.G.has_edge("User_A", 3, "User", "purchased", "Product")
         assert self.G.has_edge("User_C", 1, "User", "purchased", "Product")
         assert self.G.has_edge("User_C", 2, "User", "purchased", "Product")
         assert self.G.has_edge("User_C", 3, "User", "purchased", "Product")
@@ -269,9 +265,7 @@ class TestGraph1(BaseGraphFixture):
     def test_get_edge_data(self):
         # Test fetching edge data
         edge_data = self.time_execution(
-            lambda: self.G.get_edge_data(
-                "User_C", 2, "User", "purchased", "Product"
-            ),
+            lambda: self.G.get_edge_data("User_C", 2, "User", "purchased", "Product"),
             "get_edge_data",
         )
         assert edge_data["purchase_date"] == "2024-01-12 00:00:00"
@@ -292,16 +286,12 @@ class TestGraph1(BaseGraphFixture):
         assert degree == 2
 
         degree = self.time_execution(
-            lambda: self.G.degree(
-                1, "Product", ["reverse_purchased", "similar_to"]
-            ),
+            lambda: self.G.degree(1, "Product", ["reverse_purchased", "similar_to"]),
             "degree",
         )
         assert degree == 4
 
-        degree = self.time_execution(
-            lambda: self.G.degree(1, "Product", []), "degree"
-        )
+        degree = self.time_execution(lambda: self.G.degree(1, "Product", []), "degree")
         assert degree == 4
 
         degree = self.time_execution(
@@ -581,6 +571,7 @@ class TestGraph2(BaseGraphFixture):
             "edges": {
                 "relationship": {
                     "is_directed_edge": True,
+                    "reverse_edge_name": "reverse_relationship",
                     "from_node_type": "Entity",
                     "to_node_type": "Entity",
                     "attributes": {

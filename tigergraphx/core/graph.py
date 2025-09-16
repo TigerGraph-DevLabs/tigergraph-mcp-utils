@@ -79,8 +79,8 @@ class Graph:
         self.edge_types: Set[str] = set()
         for edge_name, edge in self._context.graph_schema.edges.items():
             self.edge_types.add(edge_name)
-            if edge.is_directed_edge:
-                self.edge_types.add(f"reverse_{edge_name}")
+            if edge.is_directed_edge and edge.reverse_edge_name:
+                self.edge_types.add(edge.reverse_edge_name)
         logger.debug(f"self.name: {self.name}")
         logger.debug(f"self.node_types: {self.node_types}")
         logger.debug(f"self.edge_types: {self.edge_types}")

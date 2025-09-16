@@ -190,7 +190,7 @@ DROP GRAPH {self._graph_name}
             # Construct the edge definition, with conditional attribute string and direction
             edge_type_str = "DIRECTED" if edge_schema.is_directed_edge else "UNDIRECTED"
             reverse_edge_clause = (
-                f' WITH REVERSE_EDGE="reverse_{edge_name}"'
+                f' WITH REVERSE_EDGE="{edge_schema.reverse_edge_name}"'
                 if edge_schema.is_directed_edge
                 else ""
             )
@@ -430,8 +430,20 @@ INSTALL QUERY *
                 for attr in edge.get("Attributes", [])
                 if attr.get("IsDiscriminator")
             }
+
+            # Determine reverse edge name
+            reverse_edge_name = edge.get("Config", {}).get("REVERSE_EDGE")
+
+            # Precheck: reverse_edge_name must not be None for directed edges
+            if edge.get("IsDirected") and not reverse_edge_name:
+                raise ValueError(
+                    f"Directed edge '{edge['Name']}' must have a reverse edge name defined "
+                    f"in 'Config.REVERSE_EDGE'."
+                )
+
             edges[edge["Name"]] = {
                 "is_directed_edge": edge["IsDirected"],
+                "reverse_edge_name": reverse_edge_name,
                 "from_node_type": edge["FromVertexTypeName"],
                 "to_node_type": edge["ToVertexTypeName"],
                 "discriminator": discriminator,
