@@ -63,13 +63,13 @@ class SchemaManager(BaseManager):
             # Add vector attributes
             gsql_add_vector_attr = self._create_gsql_add_vector_attr()
             if gsql_add_vector_attr:
-                logger.info(f"Adding vector attribute(s) for graph: {self._graph_name}...")
+                logger.info(
+                    f"Adding vector attribute(s) for graph: {self._graph_name}..."
+                )
                 result = self._tigergraph_api.gsql(gsql_add_vector_attr)
                 logger.debug(f"GSQL response: {result}")
                 if f"Using graph '{self._graph_name}'" not in result:
-                    error_msg = (
-                        f"Failed to use graph '{self._graph_name}'. GSQL response: {result}"
-                    )
+                    error_msg = f"Failed to use graph '{self._graph_name}'. GSQL response: {result}"
                     logger.error(error_msg)
                     raise RuntimeError(error_msg)
                 if "Successfully created schema change jobs" not in result:
@@ -96,7 +96,9 @@ class SchemaManager(BaseManager):
 
             return True
 
-        logger.debug(f"Graph '{self._graph_name}' already exists. Skipping graph creation.")
+        logger.debug(
+            f"Graph '{self._graph_name}' already exists. Skipping graph creation."
+        )
         return False
 
     def drop_graph(self) -> None:
@@ -366,10 +368,14 @@ INSTALL QUERY *
         # Construct nodes dictionary
         nodes = {}
         for vertex in raw_schema.get("VertexTypes", []):
-            primary_id = vertex["PrimaryId"]
-            if not primary_id["PrimaryIdAsAttribute"]:
+            primary_id = vertex.get("PrimaryId", {})
+            primary_id_as_attr = primary_id.get("PrimaryIdAsAttribute")
+
+            if primary_id_as_attr is not True:
                 raise ValueError(
-                    f"PrimaryIdAsAttribute must be set to True for node type {vertex['Name']}."
+                    f"The node type '{vertex.get('Name', '<unknown>')}' has PrimaryIdAsAttribute unset. "
+                    f"TigerGraphX requires the primary ID to be used as an attribute for certain methods. "
+                    f"Please set PrimaryIdAsAttribute to True for this node type."
                 )
 
             # Extract regular attributes
