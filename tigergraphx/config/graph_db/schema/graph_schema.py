@@ -93,6 +93,5 @@ class GraphSchema(BaseConfig):
             The updated graph schema.
         """
         for edge_name, edge in self.edges.items():
-            if edge.is_directed_edge and not edge.reverse_edge_name:
-                edge.reverse_edge_name = f"reverse_{edge_name}"
+            edge.set_default_reverse_edge(edge_name)
         return self

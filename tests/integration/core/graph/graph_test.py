@@ -462,7 +462,7 @@ class TestGraph1(BaseGraphFixture):
 
 class TestGraph2(BaseGraphFixture):
     def setup_graph(self):
-        """Set up the graph and add nodes and edges."""
+        """Set up the graph."""
         graph_schema = {
             "graph_name": "ERGraph",
             "nodes": {

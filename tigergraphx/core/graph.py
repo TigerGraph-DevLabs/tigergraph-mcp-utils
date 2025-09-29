@@ -14,6 +14,9 @@ from tigergraphx.config import (
     TigerGraphConnectionConfig,
     GraphSchema,
     LoadingJobConfig,
+    NodeSchema,
+    EdgeSchema,
+    AttributeSchema,
 )
 
 from tigergraphx.core.graph_context import GraphContext
@@ -172,6 +175,228 @@ class Graph:
         Drop the graph from TigerGraph.
         """
         return self._schema_manager.drop_graph()
+
+    def apply_schema_changes(
+        self,
+        add_nodes: Optional[Dict[str, NodeSchema | Dict | str | Path]] = None,
+        drop_nodes: Optional[List[str]] = None,
+        add_node_attributes: Optional[
+            Dict[str, Dict[str, AttributeSchema | Dict | str | Path]]
+        ] = None,
+        drop_node_attributes: Optional[Dict[str, List[str]]] = None,
+        add_edges: Optional[Dict[str, EdgeSchema | Dict | str | Path]] = None,
+        drop_edges: Optional[List[str]] = None,
+        add_edge_attributes: Optional[
+            Dict[str, Dict[str, AttributeSchema | Dict | str | Path]]
+        ] = None,
+        drop_edge_attributes: Optional[Dict[str, List[str]]] = None,
+    ) -> bool:
+        """
+        Apply multiple schema changes in a single schema change job.
+
+        This can add or drop nodes, edges, or their attributes.
+        The method executes all changes as one schema change job.
+
+        Args:
+            add_nodes: Nodes to add with their schemas.
+            drop_nodes: Names of nodes to drop.
+            add_node_attributes: Attributes to add to existing nodes.
+            drop_node_attributes: Attributes to drop from existing nodes.
+            add_edges: Edges to add with their schemas.
+            drop_edges: Names of edges to drop.
+            add_edge_attributes: Attributes to add to existing edges.
+            drop_edge_attributes: Attributes to drop from existing edges.
+
+        Returns:
+            True if the schema change job was executed successfully,
+            False if no changes were applied.
+        """
+        return self._schema_manager.apply_schema_changes(
+            add_nodes=add_nodes,
+            drop_nodes=drop_nodes,
+            add_node_attributes=add_node_attributes,
+            drop_node_attributes=drop_node_attributes,
+            add_edges=add_edges,
+            drop_edges=drop_edges,
+            add_edge_attributes=add_edge_attributes,
+            drop_edge_attributes=drop_edge_attributes,
+        )
+
+    def add_node_type(
+        self,
+        name: str,
+        schema: NodeSchema | Dict | str | Path,
+    ) -> bool:
+        """Add a new node type to the graph schema.
+
+        Args:
+            name: The name of the node type.
+            schema: The schema definition for the node type.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.add_node_type(name, schema)
+
+    def add_node_types(
+        self,
+        nodes: Dict[str, NodeSchema | Dict | str | Path],
+    ) -> bool:
+        """Add multiple node types to the graph schema.
+
+        Args:
+            nodes: A dictionary of node type names to their schemas.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.add_node_types(nodes)
+
+    def drop_node_type(
+        self,
+        name: str,
+    ) -> bool:
+        """Drop a node type from the graph schema.
+
+        Args:
+            name: The name of the node type to drop.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.drop_node_types([name])
+
+    def drop_node_types(
+        self,
+        node_names: List[str],
+    ) -> bool:
+        """Drop multiple node types from the graph schema.
+
+        Args:
+            node_names: A list of node type names to drop.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.drop_node_types(node_names)
+
+    def add_edge_type(
+        self,
+        name: str,
+        schema: EdgeSchema | Dict | str | Path,
+    ) -> bool:
+        """Add a new edge type to the graph schema.
+
+        Args:
+            name: The name of the edge type.
+            schema: The schema definition for the edge type.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.add_edge_type(name, schema)
+
+    def add_edge_types(
+        self,
+        edges: Dict[str, EdgeSchema | Dict | str | Path],
+    ) -> bool:
+        """Add multiple edge types to the graph schema.
+
+        Args:
+            edges: A dictionary of edge type names to their schemas.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.add_edge_types(edges)
+
+    def drop_edge_type(
+        self,
+        name: str,
+    ) -> bool:
+        """Drop a single edge type from the graph schema.
+
+        Args:
+            name: The name of the edge type to drop.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.drop_edge_types([name])
+
+    def drop_edge_types(
+        self,
+        edge_names: List[str],
+    ) -> bool:
+        """Drop multiple edge types from the graph schema.
+
+        Args:
+            edge_names: A list of edge type names to drop.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.drop_edge_types(edge_names)
+
+    def add_node_attributes(
+        self,
+        node_attributes: Dict[str, Dict[str, AttributeSchema | Dict | str | Path]],
+    ) -> bool:
+        """Add attributes to nodes in the graph schema.
+
+        Args:
+            node_attributes: A dictionary where keys are node type names and values
+                are dictionaries of attribute names mapped to their schema.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.add_node_attributes(node_attributes)
+
+    def drop_node_attributes(
+        self,
+        node_attributes: Dict[str, List[str]],
+    ) -> bool:
+        """Drop attributes from nodes in the graph schema.
+
+        Args:
+            node_attributes: A dictionary where keys are node type names and values
+                are lists of attribute names to drop.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.drop_node_attributes(node_attributes)
+
+    def add_edge_attributes(
+        self,
+        edge_attributes: Dict[str, Dict[str, AttributeSchema | Dict | str | Path]],
+    ) -> bool:
+        """Add attributes to edges in the graph schema.
+
+        Args:
+            edge_attributes: A dictionary where keys are edge type names and values
+                are dictionaries of attribute names mapped to their schema.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.add_edge_attributes(edge_attributes)
+
+    def drop_edge_attributes(
+        self,
+        edge_attributes: Dict[str, List[str]],
+    ) -> bool:
+        """Drop attributes from edges in the graph schema.
+
+        Args:
+            edge_attributes: A dictionary where keys are edge type names and values
+                are lists of attribute names to drop.
+
+        Returns:
+            True if the schema change succeeds.
+        """
+        return self._schema_manager.drop_edge_attributes(edge_attributes)
 
     # ------------------------------ Data Loading Operations ------------------------------
     def load_data(

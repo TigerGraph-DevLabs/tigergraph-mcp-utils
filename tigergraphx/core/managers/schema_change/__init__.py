@@ -5,16 +5,8 @@
 # Permission is granted to use, copy, modify, and distribute this software
 # under the License. The software is provided "AS IS", without warranty.
 
-from .graph import Graph
-from .tigergraph_api import TigerGraphAPI, TigerGraphAPIError
-from .tigergraph_database import TigerGraphDatabase
-from .managers import SchemaChangeBuilder
-
+from .schema_change_builder import SchemaChangeBuilder
 
 __all__ = [
-    "Graph",
-    "TigerGraphAPI",
-    "TigerGraphAPIError",
-    "TigerGraphDatabase",
     "SchemaChangeBuilder",
 ]

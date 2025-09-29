@@ -90,6 +90,17 @@ class EdgeSchema(BaseConfig):
 
         return self
 
+    def set_default_reverse_edge(self, edge_name: str) -> None:
+        """
+        Set the default reverse edge name if the edge is directed and
+        no reverse edge name is provided.
+
+        Args:
+            edge_name: The name of the edge.
+        """
+        if self.is_directed_edge and not self.reverse_edge_name:
+            self.reverse_edge_name = f"reverse_{edge_name}"
+
 
 def create_edge_schema(
     is_directed_edge: bool,
