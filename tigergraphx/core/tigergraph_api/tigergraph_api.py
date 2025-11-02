@@ -163,7 +163,9 @@ class TigerGraphAPI:
         Returns:
             The generated authentication token as a string.
         """
-        return self._security_api.create_token(secret_alias, graph_name, lifetime_seconds)
+        return self._security_api.create_token(
+            secret_alias, graph_name, lifetime_seconds
+        )
 
     def drop_token(
         self,
@@ -348,6 +350,74 @@ class TigerGraphAPI:
             The schema as JSON.
         """
         return self._schema_api.get_schema(graph_name)
+
+    def create_empty_graph(self, graph_name: str) -> str:
+        """
+        Create a new empty graph with the given name.
+
+        Args:
+            graph_name: The name of the graph.
+
+        Returns:
+            The response message.
+        """
+        return self._schema_api.create_empty_graph(graph_name)
+
+    def drop_graph(self, graph_name: str) -> str:
+        """
+        Drop a graph with the given name.
+
+        Args:
+            graph_name: The name of the graph.
+
+        Returns:
+            The response message.
+        """
+        return self._schema_api.drop_graph(graph_name)
+
+    def create_local_schema_change_job(
+        self, graph_name: str, job_name: str, payload: Dict[str, Any]
+    ) -> str:
+        """
+        Create a local schema change job for the given graph.
+
+        Args:
+            graph_name: The name of the graph.
+            job_name: The name of the job.
+            payload: The schema change details.
+
+        Returns:
+            The response message.
+        """
+        return self._schema_api.create_local_schema_change_job(
+            graph_name, job_name, payload
+        )
+
+    def run_local_schema_change_job(self, graph_name: str, job_name: str) -> str:
+        """
+        Run a local schema change job for the given graph.
+
+        Args:
+            graph_name: The name of the graph.
+            job_name: The name of the job.
+
+        Returns:
+            The response message.
+        """
+        return self._schema_api.run_local_schema_change_job(graph_name, job_name)
+
+    def drop_local_schema_change_job(self, graph_name: str, job_name: str) -> str:
+        """
+        Drop a local schema change job for the given graph.
+
+        Args:
+            graph_name: The name of the graph.
+            job_name: The name of the job.
+
+        Returns:
+            The response message.
+        """
+        return self._schema_api.drop_local_schema_change_job(graph_name, job_name)
 
     # ------------------------------ Node ------------------------------
     def retrieve_a_node(self, graph_name: str, node_type: str, node_id: str) -> List:

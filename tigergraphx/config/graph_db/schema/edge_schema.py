@@ -5,7 +5,7 @@
 # Permission is granted to use, copy, modify, and distribute this software
 # under the License. The software is provided "AS IS", without warranty.
 
-from typing import Any, Dict, Set
+from typing import Any, Dict, Optional, Set
 from pydantic import Field, model_validator
 
 from .attribute_schema import AttributeSchema, AttributesType, create_attribute_schema
@@ -21,6 +21,9 @@ class EdgeSchema(BaseConfig):
 
     is_directed_edge: bool = Field(
         default=False, description="Whether the edge is directed."
+    )
+    reverse_edge_name: Optional[str] = Field(
+        default=None, description="The name of the reverse edge."
     )
     from_node_type: str = Field(description="The type of the source node.")
     to_node_type: str = Field(description="The type of the target node.")
@@ -86,6 +89,17 @@ class EdgeSchema(BaseConfig):
                 raise ValueError(f"Attribute name '{attr_name}' is a reserved keyword.")
 
         return self
+
+    def set_default_reverse_edge(self, edge_name: str) -> None:
+        """
+        Set the default reverse edge name if the edge is directed and
+        no reverse edge name is provided.
+
+        Args:
+            edge_name: The name of the edge.
+        """
+        if self.is_directed_edge and not self.reverse_edge_name:
+            self.reverse_edge_name = f"reverse_{edge_name}"
 
 
 def create_edge_schema(

@@ -6,13 +6,21 @@
 # under the License. The software is provided "AS IS", without warranty.
 
 import logging
-from typing import Dict, Literal, Optional
+from typing import Dict, List, Literal, Optional
 from pathlib import Path
 
 from .base_manager import BaseManager
 
 from tigergraphx.core.graph_context import GraphContext
-from tigergraphx.config import GraphSchema, TigerGraphConnectionConfig
+from tigergraphx.config import (
+    GraphSchema,
+    TigerGraphConnectionConfig,
+    NodeSchema,
+    EdgeSchema,
+    AttributeSchema,
+)
+
+from .schema_change import SchemaChangeBuilder
 
 
 logger = logging.getLogger(__name__)
@@ -63,13 +71,13 @@ class SchemaManager(BaseManager):
             # Add vector attributes
             gsql_add_vector_attr = self._create_gsql_add_vector_attr()
             if gsql_add_vector_attr:
-                logger.info(f"Adding vector attribute(s) for graph: {self._graph_name}...")
+                logger.info(
+                    f"Adding vector attribute(s) for graph: {self._graph_name}..."
+                )
                 result = self._tigergraph_api.gsql(gsql_add_vector_attr)
                 logger.debug(f"GSQL response: {result}")
                 if f"Using graph '{self._graph_name}'" not in result:
-                    error_msg = (
-                        f"Failed to use graph '{self._graph_name}'. GSQL response: {result}"
-                    )
+                    error_msg = f"Failed to use graph '{self._graph_name}'. GSQL response: {result}"
                     logger.error(error_msg)
                     raise RuntimeError(error_msg)
                 if "Successfully created schema change jobs" not in result:
@@ -96,19 +104,222 @@ class SchemaManager(BaseManager):
 
             return True
 
-        logger.debug(f"Graph '{self._graph_name}' already exists. Skipping graph creation.")
+        logger.debug(
+            f"Graph '{self._graph_name}' already exists. Skipping graph creation."
+        )
         return False
 
     def drop_graph(self) -> None:
         logger.info(f"Dropping graph: {self._graph_name}...")
-        gsql_script = self._create_gsql_drop_graph()
-        result = self._tigergraph_api.gsql(gsql_script)
+        result = self._tigergraph_api.drop_graph(self._graph_name)
         logger.debug(result)
-        if f"The graph {self._graph_name} is dropped" not in result:
+        if "Successfully dropped graph" not in result:
             error_msg = f"Failed to drop the graph. GSQL response: {result}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         logger.info("Graph dropped successfully.")
+
+    # -------- Schema Change Operations --------
+    def apply_schema_changes(
+        self,
+        add_nodes: Optional[Dict[str, NodeSchema | Dict | str | Path]] = None,
+        drop_nodes: Optional[List[str]] = None,
+        add_node_attributes: Optional[
+            Dict[str, Dict[str, AttributeSchema | Dict | str | Path]]
+        ] = None,
+        drop_node_attributes: Optional[Dict[str, List[str]]] = None,
+        add_edges: Optional[Dict[str, EdgeSchema | Dict | str | Path]] = None,
+        drop_edges: Optional[List[str]] = None,
+        add_edge_attributes: Optional[
+            Dict[str, Dict[str, AttributeSchema | Dict | str | Path]]
+        ] = None,
+        drop_edge_attributes: Optional[Dict[str, List[str]]] = None,
+    ) -> bool:
+        """
+        Apply multiple schema changes in a single schema change job.
+
+        Returns:
+            True if the schema change job was executed successfully, False if no changes were applied.
+        """
+        builder = SchemaChangeBuilder()
+
+        add_nodes = add_nodes or {}
+        drop_nodes = drop_nodes or []
+        add_node_attributes = add_node_attributes or {}
+        drop_node_attributes = drop_node_attributes or {}
+        add_edges = add_edges or {}
+        drop_edges = drop_edges or []
+        add_edge_attributes = add_edge_attributes or {}
+        drop_edge_attributes = drop_edge_attributes or {}
+
+        if not (
+            add_nodes
+            or drop_nodes
+            or add_node_attributes
+            or drop_node_attributes
+            or add_edges
+            or drop_edges
+            or add_edge_attributes
+            or drop_edge_attributes
+        ):
+            return False
+
+        # Add nodes
+        for node_name, schema in add_nodes.items():
+            if node_name in self._graph_schema.nodes:
+                raise ValueError(
+                    f"Node type '{node_name}' already exists in the graph schema."
+                )
+            schema = NodeSchema.ensure_config(schema)
+            builder.add_node_type(node_name, schema)
+            self._graph_schema.nodes[node_name] = schema
+
+        # Drop nodes
+        for node_name in drop_nodes:
+            if node_name not in self._graph_schema.nodes:
+                raise ValueError(
+                    f"Node type '{node_name}' does not exist in the graph schema."
+                )
+            builder.drop_node_type(node_name)
+            del self._graph_schema.nodes[node_name]
+
+        # Add node attributes
+        for node_name, attrs in add_node_attributes.items():
+            if node_name not in self._graph_schema.nodes:
+                raise ValueError(
+                    f"Node type '{node_name}' does not exist to add attributes."
+                )
+            schema = self._graph_schema.nodes[node_name]
+            for attr_name, attr_type in attrs.items():
+                if attr_name in schema.attributes:
+                    raise ValueError(
+                        f"Attribute '{attr_name}' already exists in node '{node_name}'."
+                    )
+                attr_type = AttributeSchema.ensure_config(attr_type)
+                schema.attributes[attr_name] = attr_type
+                builder.add_node_attribute(node_name, attr_name, attr_type)
+
+        # Drop node attributes
+        for node_name, attrs in drop_node_attributes.items():
+            if node_name not in self._graph_schema.nodes:
+                raise ValueError(
+                    f"Node type '{node_name}' does not exist to drop attributes."
+                )
+            schema = self._graph_schema.nodes[node_name]
+            for attr_name in attrs:
+                if attr_name not in schema.attributes:
+                    raise ValueError(
+                        f"Attribute '{attr_name}' does not exist in node '{node_name}'."
+                    )
+                del schema.attributes[attr_name]
+                builder.drop_node_attribute(node_name, attr_name)
+
+        # Add edges
+        for edge_name, schema in add_edges.items():
+            if edge_name in self._graph_schema.edges:
+                raise ValueError(
+                    f"Edge type '{edge_name}' already exists in the graph schema."
+                )
+            schema = EdgeSchema.ensure_config(schema)
+            schema.set_default_reverse_edge(edge_name)
+            builder.add_edge_type(edge_name, schema)
+            self._graph_schema.edges[edge_name] = schema
+
+        # Drop edges
+        for edge_name in drop_edges:
+            if edge_name not in self._graph_schema.edges:
+                raise ValueError(
+                    f"Edge type '{edge_name}' does not exist in the graph schema."
+                )
+            builder.drop_edge_type(edge_name)
+            del self._graph_schema.edges[edge_name]
+
+        # Add edge attributes
+        for edge_name, attrs in add_edge_attributes.items():
+            if edge_name not in self._graph_schema.edges:
+                raise ValueError(
+                    f"Edge type '{edge_name}' does not exist to add attributes."
+                )
+            schema = self._graph_schema.edges[edge_name]
+            for attr_name, attr_type in attrs.items():
+                if attr_name in schema.attributes:
+                    raise ValueError(
+                        f"Attribute '{attr_name}' already exists in edge '{edge_name}'."
+                    )
+                attr_type = AttributeSchema.ensure_config(attr_type)
+                schema.attributes[attr_name] = attr_type
+                builder.add_edge_attribute(edge_name, attr_name, attr_type)
+
+        # Drop edge attributes
+        for edge_name, attrs in drop_edge_attributes.items():
+            if edge_name not in self._graph_schema.edges:
+                raise ValueError(
+                    f"Edge type '{edge_name}' does not exist to drop attributes."
+                )
+            schema = self._graph_schema.edges[edge_name]
+            for attr_name in attrs:
+                if attr_name not in schema.attributes:
+                    raise ValueError(
+                        f"Attribute '{attr_name}' does not exist in edge '{edge_name}'."
+                    )
+                del schema.attributes[attr_name]
+                builder.drop_edge_attribute(edge_name, attr_name)
+
+        # Execute the schema change job
+        job_name = f"schema_change_{self._graph_name}"
+        return self._execute_schema_change_job(builder, job_name)
+
+    def add_node_type(self, name: str, schema: NodeSchema | Dict | str | Path) -> bool:
+        """Add a single node type to the graph schema."""
+        return self.apply_schema_changes(add_nodes={name: schema})
+
+    def add_node_types(self, nodes: Dict[str, NodeSchema | Dict | str | Path]) -> bool:
+        """Add multiple node types to the graph schema."""
+        return self.apply_schema_changes(add_nodes=nodes)
+
+    def drop_node_type(self, name: str) -> bool:
+        """Drop a single node type from the graph schema."""
+        return self.apply_schema_changes(drop_nodes=[name])
+
+    def drop_node_types(self, node_names: List[str]) -> bool:
+        """Drop multiple node types from the graph schema."""
+        return self.apply_schema_changes(drop_nodes=node_names)
+
+    def add_edge_type(self, name: str, schema: EdgeSchema | Dict | str | Path) -> bool:
+        """Add a single edge type to the graph schema."""
+        return self.apply_schema_changes(add_edges={name: schema})
+
+    def add_edge_types(self, edges: Dict[str, EdgeSchema | Dict | str | Path]) -> bool:
+        """Add multiple edge types to the graph schema."""
+        return self.apply_schema_changes(add_edges=edges)
+
+    def drop_edge_type(self, name: str) -> bool:
+        """Drop a single edge type from the graph schema."""
+        return self.apply_schema_changes(drop_edges=[name])
+
+    def drop_edge_types(self, edge_names: List[str]) -> bool:
+        """Drop multiple edge types from the graph schema."""
+        return self.apply_schema_changes(drop_edges=edge_names)
+
+    def add_node_attributes(
+        self, node_attributes: Dict[str, Dict[str, AttributeSchema | Dict | str | Path]]
+    ) -> bool:
+        """Add attributes to nodes in the graph schema."""
+        return self.apply_schema_changes(add_node_attributes=node_attributes)
+
+    def drop_node_attributes(self, node_attributes: Dict[str, List[str]]) -> bool:
+        """Drop attributes from nodes in the graph schema."""
+        return self.apply_schema_changes(drop_node_attributes=node_attributes)
+
+    def add_edge_attributes(
+        self, edge_attributes: Dict[str, Dict[str, AttributeSchema | Dict | str | Path]]
+    ) -> bool:
+        """Add attributes to edges in the graph schema."""
+        return self.apply_schema_changes(add_edge_attributes=edge_attributes)
+
+    def drop_edge_attributes(self, edge_attributes: Dict[str, List[str]]) -> bool:
+        """Drop attributes from edges in the graph schema."""
+        return self.apply_schema_changes(drop_edge_attributes=edge_attributes)
 
     def _check_graph_exists(self) -> bool:
         """Check if the specified graph name exists in the gsql_script."""
@@ -119,16 +330,6 @@ class SchemaManager(BaseManager):
             "exists" if "Using graph" in result else "does not exist",
         )
         return "Using graph" in result
-
-    def _create_gsql_drop_graph(self) -> str:
-        # Generating the gsql script to drop graph
-        gsql_script = f"""
-USE GRAPH {self._graph_name}
-DROP QUERY *
-DROP JOB *
-DROP GRAPH {self._graph_name}
-"""
-        return gsql_script.strip()
 
     def _create_gsql_graph_schema(self) -> str:
         # Extracting node attributes
@@ -188,7 +389,7 @@ DROP GRAPH {self._graph_name}
             # Construct the edge definition, with conditional attribute string and direction
             edge_type_str = "DIRECTED" if edge_schema.is_directed_edge else "UNDIRECTED"
             reverse_edge_clause = (
-                f' WITH REVERSE_EDGE="reverse_{edge_name}"'
+                f' WITH REVERSE_EDGE="{edge_schema.reverse_edge_name}"'
                 if edge_schema.is_directed_edge
                 else ""
             )
@@ -345,6 +546,52 @@ INSTALL QUERY *
         logger.debug("GSQL script for adding vector attributes: %s", gsql_script)
         return gsql_script.rstrip()
 
+    def _execute_schema_change_job(
+        self, builder: SchemaChangeBuilder, job_name: str
+    ) -> bool:
+        """Create, run, and drop a local schema change job, logging all steps."""
+        logger.info(
+            f"Running schema change job '{job_name}' on graph: {self._graph_name}..."
+        )
+        try:
+            # Create job
+            create_result = self._tigergraph_api.create_local_schema_change_job(
+                self._graph_name, job_name, builder.build_payload()
+            )
+            logger.debug(f"Create job result: {create_result}")
+            if "Successfully created schema change job" not in create_result:
+                raise RuntimeError(
+                    f"Failed to create schema change job: {create_result}"
+                )
+
+            # Run job
+            run_result = self._tigergraph_api.run_local_schema_change_job(
+                self._graph_name, job_name
+            )
+            logger.debug(f"Run job result: {run_result}")
+            if "Schema change job run successfully!" not in run_result:
+                raise RuntimeError(f"Failed to run schema change job: {run_result}")
+
+            logger.info(f"Schema change job '{job_name}' executed successfully.")
+            return True
+
+        except Exception as e:
+            logger.error(f"Schema change job '{job_name}' failed: {e}")
+            raise
+
+        finally:
+            # Always attempt to drop the job
+            try:
+                drop_result = self._tigergraph_api.drop_local_schema_change_job(
+                    self._graph_name, job_name
+                )
+                logger.debug(f"Drop job result: {drop_result}")
+            except Exception as cleanup_error:
+                logger.warning(
+                    f"Failed to drop schema change job '{job_name}' during cleanup: "
+                    f"{cleanup_error}"
+                )
+
     @staticmethod
     def get_schema_from_db(
         graph_name: str,
@@ -366,10 +613,14 @@ INSTALL QUERY *
         # Construct nodes dictionary
         nodes = {}
         for vertex in raw_schema.get("VertexTypes", []):
-            primary_id = vertex["PrimaryId"]
-            if not primary_id["PrimaryIdAsAttribute"]:
+            primary_id = vertex.get("PrimaryId", {})
+            primary_id_as_attr = primary_id.get("PrimaryIdAsAttribute")
+
+            if primary_id_as_attr is not True:
                 raise ValueError(
-                    f"PrimaryIdAsAttribute must be set to True for node type {vertex['Name']}."
+                    f"The node type '{vertex.get('Name', '<unknown>')}' has PrimaryIdAsAttribute unset. "
+                    f"TigerGraphX requires the primary ID to be used as an attribute for certain methods. "
+                    f"Please set PrimaryIdAsAttribute to True for this node type."
                 )
 
             # Extract regular attributes
@@ -424,8 +675,20 @@ INSTALL QUERY *
                 for attr in edge.get("Attributes", [])
                 if attr.get("IsDiscriminator")
             }
+
+            # Determine reverse edge name
+            reverse_edge_name = edge.get("Config", {}).get("REVERSE_EDGE")
+
+            # Precheck: reverse_edge_name must not be None for directed edges
+            if edge.get("IsDirected") and not reverse_edge_name:
+                raise ValueError(
+                    f"Directed edge '{edge['Name']}' must have a reverse edge name defined "
+                    f"in 'Config.REVERSE_EDGE'."
+                )
+
             edges[edge["Name"]] = {
                 "is_directed_edge": edge["IsDirected"],
+                "reverse_edge_name": reverse_edge_name,
                 "from_node_type": edge["FromVertexTypeName"],
                 "to_node_type": edge["ToVertexTypeName"],
                 "discriminator": discriminator,

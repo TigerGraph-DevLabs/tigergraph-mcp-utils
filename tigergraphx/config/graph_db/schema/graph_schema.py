@@ -83,3 +83,15 @@ class GraphSchema(BaseConfig):
             )
 
         return self
+
+    @model_validator(mode="after")
+    def set_reverse_edge_names(self) -> "GraphSchema":
+        """
+        For directed edges without a reverse_edge_name, set it to 'reverse_[edge_name]'.
+
+        Returns:
+            The updated graph schema.
+        """
+        for edge_name, edge in self.edges.items():
+            edge.set_default_reverse_edge(edge_name)
+        return self

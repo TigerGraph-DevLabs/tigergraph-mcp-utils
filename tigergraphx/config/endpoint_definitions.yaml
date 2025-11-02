@@ -36,6 +36,31 @@ endpoints:
       # 3.x: "/gsqlserver/gsql/schema"
       4.x: "/gsql/v1/schema/graphs/{graph_name}"
 
+  create_empty_graph:
+    path:
+      4.x: "/gsql/v1/schema/graphs?graphName={graph_name}&gsql=false"
+    method: "POST"
+
+  drop_graph:
+    path:
+      4.x: "/gsql/v1/schema/graphs/{graph_name}?cascade=true"
+    method: "DELETE"
+
+  create_local_schema_change_job:
+    path:
+      4.x: "/gsql/v1/schema/jobs/{job_name}?graph={graph_name}"
+    method: "POST"
+
+  run_local_schema_change_job:
+    path:
+      4.x: "/gsql/v1/schema/jobs/{job_name}?graph={graph_name}"
+    method: "PUT"
+
+  drop_local_schema_change_job:
+    path:
+      4.x: "/gsql/v1/schema/jobs?graph={graph_name}&jobName={job_name}"
+    method: "DELETE"
+
   # ------------------------------ Data Source ------------------------------
   create_data_source:
     path:

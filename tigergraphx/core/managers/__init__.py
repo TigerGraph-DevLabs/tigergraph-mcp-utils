@@ -12,6 +12,7 @@ from .edge_manager import EdgeManager
 from .statistics_manager import StatisticsManager
 from .query_manager import QueryManager
 from .vector_manager import VectorManager
+from .schema_change import SchemaChangeBuilder
 
 __all__ = [
     "SchemaManager",
@@ -21,4 +22,5 @@ __all__ = [
     "StatisticsManager",
     "QueryManager",
     "VectorManager",
+    "SchemaChangeBuilder",
 ]
