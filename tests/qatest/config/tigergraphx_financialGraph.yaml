@@ -1,0 +1,271 @@
+# tests/qatest/config/tigergraph_gsql.yaml
+
+schema:
+  graph_name: financialGraph
+  nodes:
+    Account:
+      primary_key: name
+      attributes:
+        name: STRING
+        isBlocked: BOOL
+    City:
+      primary_key: name
+      attributes:
+        name: STRING
+    Phone:
+      primary_key: number
+      attributes:
+        number: STRING
+        isBlocked: BOOL
+  edges:
+    transfer:
+      is_directed_edge: true
+      from_node_type: Account
+      to_node_type: Account
+      discriminator: transaction_id
+      attributes:
+        date: DATETIME
+        amount: UINT
+        transaction_id: STRING
+    hasPhone:
+      is_directed_edge: false 
+      from_node_type: Account
+      to_node_type: Phone
+      attributes: {}
+    isLocatedIn: 
+      is_directed_edge: true 
+      from_node_type: Account
+      to_node_type: City
+      attributes: {}
+
+
+nodes:
+  Account:
+    - ["Scott", {name: "Scott", isBlocked: false}]
+    - ["Jenny", {name: "Jenny", isBlocked: false}]
+    - ["Steven", {name: "Steven", isBlocked: true}]
+    - ["Paul", {name: "Paul", isBlocked: false}]
+    - ["Ed", {name: "Ed", isBlocked: false}]
+  City:
+    - ["New York", {name: "New York"}]
+    - ["Gainesville", {name: "Gainesville"}]
+    - ["San Francisco", {name: "San Francisco"}]
+  Phone:
+    - ["718-245-5888", {number: "718-245-5888", isBlocked: false}]
+    - ["650-658-9867", {number: "650-658-9867", isBlocked: true}]
+    - ["352-871-8978", {number: "352-871-8978", isBlocked: false}]
+
+edges:
+  hasPhone:
+    - ["Scott", "718-245-5888", {}]
+    - ["Jenny", "718-245-5888", {}]
+    - ["Jenny", "650-658-9867", {}]
+    - ["Paul", "650-658-9867", {}]
+    - ["Ed", "352-871-8978", {}]
+  isLocatedIn:
+    - ["Scott", "New York", {}]
+    - ["Jenny", "San Francisco", {}]
+    - ["Steven", "San Francisco", {}]
+    - ["Paul", "Gainesville", {}]
+    - ["Ed", "Gainesville", {}]
+  transfer:
+    - ["Scott", "Ed", {date: "2024-01-04", amount: 20000, transaction_id: "tfr001"}]
+    - ["Scott", "Ed", {date: "2024-02-01", amount: 800, transaction_id: "tfr002"}]
+    - ["Scott", "Ed", {date: "2024-02-14", amount: 500, transaction_id: "tfr003"}]
+    - ["Jenny", "Scott", {date: "2024-04-04", amount: 1000, transaction_id: "tfr004"}]
+    - ["Paul", "Jenny", {date: "2024-02-01", amount: 653, transaction_id: "tfr005"}]
+    - ["Steven", "Jenny", {date: "2024-05-01", amount: 8560, transaction_id: "tfr006"}]
+    - ["Ed", "Paul", {date: "2024-01-04", amount: 1500, transaction_id: "tfr007"}]
+    - ["Paul", "Steven", {date: "2023-05-09", amount: 20000, transaction_id: "tfr008"}]
+
+
+test_add_account_nodes_from_data:
+  cases:
+    - id: "default_set"
+      accounts_to_add:
+        - ["Scott", {name: "Scott", isBlocked: false}]
+        - ["Jenny", {name: "Jenny", isBlocked: false}]
+        - ["Steven", {name: "Steven", isBlocked: true}]
+        - ["Paul", {name: "Paul", isBlocked: false}]
+        - ["Ed", {name: "Ed", isBlocked: false}]
+      verify_nodes: 
+        - node_id: "Steven"
+          expected_attrs: {isBlocked: true, name: "Steven"}
+        - node_id: "Scott"
+          expected_attrs: {isBlocked: false, name: "Scott"}
+
+test_add_single_node_explicitly:
+  cases:
+    - id: "Steventest"
+      node_to_add:
+        id: "Steventest" 
+        type: "Account"
+        attrs: {name: "Steventest", isBlocked: true}
+
+test_get_single_node_data:
+  cases:
+    - id: "Steventest"
+      node_to_add: 
+        id: "Steventest" 
+        type: "Account"
+        attrs: {name: "Steventest", isBlocked: true}
+
+test_get_single_edge_data:
+  cases:
+    - id: "Scott_hasPhone_718"
+      prerequisite_nodes:
+        Account: [["Scott", {name: "Scott", isBlocked: false}]]
+        Phone: [["718-245-5888", {number: "718-245-5888", isBlocked: false}]]
+      edge_to_add:
+        src_id: "Scott"
+        tgt_id: "718-245-5888"
+        src_type: "Account"
+        tgt_type: "Phone"
+        edge_type: "hasPhone"
+        attrs: {} 
+
+test_node_degrees:
+  nodes_to_load:
+    Account:
+      - ["Scott", {name: "Scott", isBlocked: false}]
+      - ["Jenny", {name: "Jenny", isBlocked: false}]
+      - ["Steven", {name: "Steven", isBlocked: true}]
+      - ["Paul", {name: "Paul", isBlocked: false}]
+      - ["Ed", {name: "Ed", isBlocked: false}]
+    City:
+      - ["New York", {name: "New York"}]
+      - ["Gainesville", {name: "Gainesville"}]
+      - ["San Francisco", {name: "San Francisco"}]
+    Phone:
+      - ["718-245-5888", {number: "718-245-5888", isBlocked: false}]
+      - ["650-658-9867", {number: "650-658-9867", isBlocked: true}]
+      - ["352-871-8978", {number: "352-871-8978", isBlocked: false}]
+  edges_to_load:
+    hasPhone: # From hasPhone.csv
+      - ["Scott", "718-245-5888", {}]
+      - ["Jenny", "718-245-5888", {}]
+      - ["Jenny", "650-658-9867", {}]
+      - ["Paul", "650-658-9867", {}]
+      - ["Ed", "352-871-8978", {}]
+    isLocatedIn: # From locate.csv
+      - ["Scott", "New York", {}]
+      - ["Jenny", "San Francisco", {}]
+      - ["Steven", "San Francisco", {}]
+      - ["Paul", "Gainesville", {}]
+      - ["Ed", "Gainesville", {}]
+    transfer: # From transfer.csv
+      - ["Scott", "Ed", {date: "2024-01-04", amount: 20000, transaction_id: "tfr001"}]
+      - ["Scott", "Ed", {date: "2024-02-01", amount: 800, transaction_id: "tfr002"}]
+      - ["Scott", "Ed", {date: "2024-02-14", amount: 500, transaction_id: "tfr003"}]
+      - ["Jenny", "Scott", {date: "2024-04-04", amount: 1000, transaction_id: "tfr004"}]
+      - ["Paul", "Jenny", {date: "2024-02-01", amount: 653, transaction_id: "tfr005"}]
+      - ["Steven", "Jenny", {date: "2024-05-01", amount: 8560, transaction_id: "tfr006"}]
+      - ["Ed", "Paul", {date: "2024-01-04", amount: 1500, transaction_id: "tfr007"}]
+      - ["Paul", "Steven", {date: "2023-05-09", amount: 20000, transaction_id: "tfr008"}]
+
+  degree_checks:
+    - description: "Scott total degree"
+      node_id: "Scott"
+      node_type: "Account"
+      edge_types: null 
+      expected_degree: 6
+    - description: "Scott transfer degree"
+      node_id: "Scott"
+      node_type: "Account"
+      edge_types: ["transfer"] 
+      expected_degree: 4
+    - description: "Jenny total degree"
+      node_id: "Jenny"
+      node_type: "Account"
+      edge_types: null
+      expected_degree: 6
+    - description: "Phone 718-... degree"
+      node_id: "718-245-5888"
+      node_type: "Phone"
+      edge_types: null
+      expected_degree: 2
+    - description: "City New York degree"
+      node_id: "New York"
+      node_type: "City"
+      edge_types: null
+      expected_degree: 1
+
+test_load_all_data_programmatically:
+  cases:
+    - id: "full_load_and_verify"
+      nodes_to_load:
+        Account:
+          - ["Scott", {name: "Scott", isBlocked: false}]
+          - ["Jenny", {name: "Jenny", isBlocked: false}]
+          - ["Steven", {name: "Steven", isBlocked: true}]
+          - ["Paul", {name: "Paul", isBlocked: false}]
+          - ["Ed", {name: "Ed", isBlocked: false}]
+        City:
+          - ["New York", {name: "New York"}]
+          - ["Gainesville", {name: "Gainesville"}]
+          - ["San Francisco", {name: "San Francisco"}]
+        Phone:
+          - ["718-245-5888", {number: "718-245-5888", isBlocked: false}]
+          - ["650-658-9867", {number: "650-658-9867", isBlocked: true}]
+          - ["352-871-8978", {number: "352-871-8978", isBlocked: false}]
+      edges_to_load:
+        hasPhone:
+          - ["Scott", "718-245-5888", {}]
+          - ["Jenny", "718-245-5888", {}]
+          - ["Jenny", "650-658-9867", {}]
+          - ["Paul", "650-658-9867", {}]
+          - ["Ed", "352-871-8978", {}]
+        isLocatedIn:
+          - ["Scott", "New York", {}]
+          - ["Jenny", "San Francisco", {}]
+          - ["Steven", "San Francisco", {}]
+          - ["Paul", "Gainesville", {}]
+          - ["Ed", "Gainesville", {}]
+        transfer:
+          - ["Scott", "Ed", {date: "2024-01-04", amount: 20000, transaction_id: "tfr001"}]
+          - ["Scott", "Ed", {date: "2024-02-01", amount: 800, transaction_id: "tfr002"}]
+          - ["Scott", "Ed", {date: "2024-02-14", amount: 500, transaction_id: "tfr003"}]
+          - ["Jenny", "Scott", {date: "2024-04-04", amount: 1000, transaction_id: "tfr004"}]
+          - ["Paul", "Jenny", {date: "2024-02-01", amount: 653, transaction_id: "tfr005"}]
+          - ["Steven", "Jenny", {date: "2024-05-01", amount: 8560, transaction_id: "tfr006"}]
+          - ["Ed", "Paul", {date: "2024-01-04", amount: 1500, transaction_id: "tfr007"}]
+          - ["Paul", "Steven", {date: "2023-05-09", amount: 20000, transaction_id: "tfr008"}]
+      verify_points:
+        - type: "node"
+          node_type: "Account"
+          node_id: "Steven"
+          expected_attrs: {name: "Steven", isBlocked: true}
+        - type: "edge_count"
+          src_id: "Scott"
+          tgt_id: "Ed"
+          src_type: "Account"
+          tgt_type: "Account"
+          edge_type: "transfer"
+          expected_count: 3
+        - type: "node"
+          node_type: "Phone"
+          node_id: "650-658-9867"
+          expected_attrs: {number: "650-658-9867", isBlocked: true}
+        - type: "edge_exists"
+          src_id: "Paul"
+          tgt_id: "Jenny"
+          src_type: "Account"
+          tgt_type: "Account"
+          edge_type: "transfer"
+
+test_number_of_nodes:
+  cases:
+    - id: "total_nodes"
+      node_type: null 
+      expected_count: 11
+    - id: "account_nodes"
+      node_type: "Account"
+      expected_count: 5
+    - id: "city_nodes"
+      node_type: "City"
+      expected_count: 3
+    - id: "phone_nodes"
+      node_type: "Phone"
+      expected_count: 3
+
+
